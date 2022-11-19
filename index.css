@@ -1,4 +1,82 @@
 * {
     box-sizing: border-box;
     font-family: Arial, sans-serif;
+    font-size: 24px;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.message-form, .hash-form {
+    margin: 20px auto auto 20px;
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+}
+
+@media screen and (max-width: 600px) {
+    .message-form, .hash-form {
+        margin-right: 20px;
+        max-width: 100%;
+    }
+}
+
+.secret-key-input, .message-input, .hash-input {
+    outline: none;
+    height: 1.5rem;
+}
+
+.secret-key-input:invalid, .message-input:invalid, .hash-input:invalid {
+    border: 2px solid red;
+}
+
+.invalid-secret-key-label, .invalid-message-label, .invalid-hash-label {
+    display: none;
+}
+
+.message-input:invalid + .invalid-message-label {
+    display: block;
+}
+
+.hash-input:invalid + .invalid-hash-label {
+    display: block;
+}
+
+.secret-key-input:invalid + .invalid-secret-key-label {
+    display: block;
+}
+
+.form-title {
+    margin: 5px 0 0 0;
+}
+
+.form-output {
+    max-width: 100%;
+    margin: 5px 0 0 0;
+    font-family: inherit;
+    font-size: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.form-output__label {
+    max-width: 100%;
+    margin: 5px 0 0 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.encryption-table {
+    margin: 20px auto auto 20px;
+    text-align: center;
+}
+
+td[scope="row"] {
+    border-bottom: 2px solid green;
+}
+
+td[scope="col"] {
+    border-right: 2px solid blue;
 }
