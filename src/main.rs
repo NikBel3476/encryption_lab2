@@ -55,7 +55,15 @@ impl Component for Model {
                         }
                     }
                     if re_hash.is_match(&self.hash_input) {
-                        self.encoded_message = encryption::decrypt(&self.hash_input, &self.secret_key)
+                        self.encoded_message = match encryption::decrypt(
+                            self.hash_input.as_bytes(),
+                            self.secret_key.as_bytes()
+                        ) {
+                            Ok(decrypted_message) => {
+                                std::str::from_utf8(&decrypted_message).unwrap().to_string()
+                            },
+                            Err(err_message) => err_message
+                        }
                     }
                 }
             }
@@ -73,15 +81,34 @@ impl Component for Model {
                         chars.next_back();
                         chars.as_str().to_string()
                     },
-                    Err(message) => message
+                    Err(err_message) => err_message
                 }
             },
             Msg::HashInputChange(hash) => {
-                let re = Regex::new(r"^[a-zA-Z0-9\s]+$").unwrap();
+                let re = Regex::new(r"^[0-9\s,]+$").unwrap();
                 match re.is_match(&hash) {
                     true => {
                         self.hash_input = hash.clone();
-                        self.encoded_message = encryption::decrypt(&hash, &self.secret_key);
+
+                        match encryption::str_to_bytes(&self.hash_input) {
+                            Ok(bytes_vec) => {
+                                self.encoded_message = match encryption::decrypt(
+                                    bytes_vec.as_slice(),
+                                    self.secret_key.as_bytes()
+                                ) {
+                                    Ok(decrypted_message) => {
+                                        match std::str::from_utf8(&decrypted_message) {
+                                            Ok(message) => message.to_string(),
+                                            Err(_) => String::from("Не удалось расшифровать сообщение")
+                                        }
+                                    },
+                                    Err(err_message) => err_message
+                                }
+                            },
+                            Err(err_message) => {
+                                self.encoded_message = err_message
+                            }
+                        }
                     },
                     false => {
                         self.hash_input = String::new();
@@ -153,7 +180,7 @@ impl Component for Model {
                     id="hash"
                     name="hash"
                     oninput={on_hash_input_change}
-                    pattern=r"^[a-zA-Z0-9\s]+$"
+                    pattern=r"^[0-9\s,]+$"
                 />
                 <span class="invalid-hash-label">
                     { "Можно ввести только символы латинского алфавита, цифры и пробелы" }
