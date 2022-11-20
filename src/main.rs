@@ -61,14 +61,12 @@ impl Component for Model {
             }
             Msg::MessageInputChange(message) => {
                 // let re = Regex::new(r"^[a-zA-Z0-9]+$").unwrap();
-                log::info!("{:#?}", message.as_bytes());
-                self.message_input = message.clone();
+                self.message_input = message;
                 self.message_hash = match encryption::encrypt(
                     self.message_input.as_bytes(),
                     self.secret_key.as_bytes()
                 ) {
                     Ok(hash) => {
-                        log::info!("{:#?}", hash);
                         let message = format!("{:?}", hash);
                         let mut chars = message.chars();
                         chars.next();
