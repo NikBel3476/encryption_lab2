@@ -28,7 +28,7 @@ impl Component for Model {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            secret_key: String::from("SECRET_KEY_WITH_LENGTH_256_BITS_"),
+            secret_key: String::from("SECRET_KEY_WITH_LENGTH_32_BYTES_"),
             message_input: String::new(),
             message_hash: String::new(),
             hash_input: String::new(),
@@ -39,36 +39,63 @@ impl Component for Model {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SecretKeyChange(secret_key) => {
-                let re = Regex::new(r"^[a-zA-Z0-9]+$").unwrap();
-                let re_key = Regex::new(r"^[a-zA-Z0-9_]+$").unwrap();
-                let re_hash = Regex::new(r"^[a-zA-Z0-9\s]+$").unwrap();
+                let re_hash = Regex::new(r"^[0-9\s,]+$").unwrap();
+
                 let secret_key_bytes_len = secret_key.as_bytes().len();
-                if secret_key_bytes_len == 32 && re_key.is_match(&secret_key) {
-                    self.secret_key = secret_key;
-                    if re.is_match(&self.message_input) {
+                match secret_key_bytes_len {
+                    32 => {
+                        self.secret_key = secret_key;
+
                         self.message_hash = match encryption::encrypt(
                             self.message_input.as_bytes(),
                             self.secret_key.as_bytes()
                         ) {
-                            Ok(hash) => hash.iter().map(|&x| x as char).collect(),
-                            Err(_) => String::new()
-                        }
-                    }
-                    if re_hash.is_match(&self.hash_input) {
-                        self.encoded_message = match encryption::decrypt(
-                            self.hash_input.as_bytes(),
-                            self.secret_key.as_bytes()
-                        ) {
-                            Ok(decrypted_message) => {
-                                std::str::from_utf8(&decrypted_message).unwrap().to_string()
+                            Ok(hash) => {
+                                let message = format!("{:?}", hash);
+                                let mut chars = message.chars();
+                                chars.next();
+                                chars.next_back();
+                                chars.as_str().to_string()
                             },
                             Err(err_message) => err_message
+                        };
+
+                        match re_hash.is_match(&self.hash_input) {
+                            true => {
+                                match encryption::str_to_bytes(&self.hash_input) {
+                                    Ok(bytes_vec) => {
+                                        self.encoded_message = match encryption::decrypt(
+                                            bytes_vec.as_slice(),
+                                            self.secret_key.as_bytes()
+                                        ) {
+                                            Ok(decrypted_message) => {
+                                                match std::str::from_utf8(&decrypted_message) {
+                                                    Ok(message) => message.to_string(),
+                                                    Err(_) => String::from("Не удалось расшифровать сообщение")
+                                                }
+                                            },
+                                            Err(err_message) => err_message
+                                        }
+                                    },
+                                    Err(err_message) => {
+                                        self.encoded_message = err_message
+                                    }
+                                }
+                            },
+                            false => {
+                                self.hash_input = String::new();
+                                self.encoded_message = String::new();
+                            }
                         }
+                    },
+                    key_size => {
+                        let message = format!("Длина ключа должна быть 32 байта. Текущая длина: {} байтов", key_size);
+                        self.message_hash = message.clone();
+                        self.encoded_message = message;
                     }
                 }
             }
             Msg::MessageInputChange(message) => {
-                // let re = Regex::new(r"^[a-zA-Z0-9]+$").unwrap();
                 self.message_input = message;
                 self.message_hash = match encryption::encrypt(
                     self.message_input.as_bytes(),
@@ -86,6 +113,7 @@ impl Component for Model {
             },
             Msg::HashInputChange(hash) => {
                 let re = Regex::new(r"^[0-9\s,]+$").unwrap();
+
                 match re.is_match(&hash) {
                     true => {
                         self.hash_input = hash.clone();
@@ -148,9 +176,9 @@ impl Component for Model {
                     id="secret-key"
                     name="secret-key"
                     minlength="1"
-                    placeholder="SECRET"
+                    placeholder="SECRET_KEY_WITH_LENGTH_32_BYTES_"
                     oninput={on_secret_key_input_change}
-                    pattern=r"^[a-zA-Z0-9]+$"
+                    // pattern=r"^[a-zA-Z0-9]+$"
                 />
                 <span class="invalid-secret-key-label">
                     { "Ключ должен содержать только буквы латинского алфавита или цифры" }
@@ -183,7 +211,7 @@ impl Component for Model {
                     pattern=r"^[0-9\s,]+$"
                 />
                 <span class="invalid-hash-label">
-                    { "Можно ввести только символы латинского алфавита, цифры и пробелы" }
+                    { "Можно ввести только числа, пробелы и запятые" }
                 </span>
                 <p class="form-output__label">{ "Сообщение:" }</p>
                 <p class="form-output">{ &self.encoded_message }</p>

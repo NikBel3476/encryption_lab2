@@ -137,7 +137,7 @@ pub fn encrypt(data_to_encrypt: &[u8], key: &[u8]) -> Result<Vec<u8>, String> {
     let bytes_to_encrypt = data_to_encrypt.len();
     if bytes_to_encrypt % 8 != 0 {
         return Err(format!(
-            "Длина входящих данных должна быть кратна 8 байтам. Текущая длина: {} байт",
+            "Длина входящих данных должна быть кратна 8 байтам. Текущая длина: {} байтов",
             bytes_to_encrypt
         ));
     }
@@ -156,7 +156,7 @@ pub fn decrypt(data_to_decrypt: &[u8], key: &[u8]) -> Result<Vec<u8>, String> {
     let bytes_to_decrypt = data_to_decrypt.len();
     if bytes_to_decrypt % 8 != 0 {
         return Err(format!(
-            "Количество байт должно быть кратно 8. Текущая длина: {} байт",
+            "Количество байтов должно быть кратно 8. Текущая длина: {} байтов",
             bytes_to_decrypt
         ));
     }
@@ -178,4 +178,16 @@ pub fn str_to_bytes(data: &str) -> Result<Vec<u8>, String> {
             Err(_) => Err(String::from("Не удалось преобразовать массив байтов"))
         }
     }).collect::<Result<Vec<u8>, String>>()
+}
+
+pub fn str_to_key(str_key: &str) -> Result<[u8; 32], String> {
+    let key = str_key.as_bytes().to_vec();
+    if key.len() != 32 {
+        return Err(format!("Длина ключа должна быть 32 байта. Текущая длина: {} байтов", key.len()));
+    }
+
+    match key.try_into() {
+        Ok(key) => Ok(key),
+        Err(_) => Err(String::from("Не удалось преобразовать ключ"))
+    }
 }
