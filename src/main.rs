@@ -8,6 +8,8 @@ use wasm_logger;
 
 pub mod encryption;
 
+const DEFAULT_KEY: &str = "SECRET_KEY_WITH_LENGTH_32_BYTES_";
+
 enum Msg {
     SecretKeyChange(String),
     MessageInputChange(String),
@@ -28,7 +30,7 @@ impl Component for Model {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            secret_key: String::from("SECRET_KEY_WITH_LENGTH_32_BYTES_"),
+            secret_key: String::from(DEFAULT_KEY),
             message_input: String::new(),
             message_hash: String::new(),
             hash_input: String::new(),

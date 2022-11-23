@@ -126,10 +126,11 @@ fn crypt_round_fn(data: &[u8], key_part: &[u8]) -> [u8; 4] {
         let low_4_bits = x & 0x0F;
 
         let result_byte =(S_BOX[i][high_4_bits as usize] << 4) | S_BOX[i + 1][low_4_bits as usize];
-        // left circular shift by 11 bits
-        encrypted_block[i] = result_byte.rotate_left(11);
+        encrypted_block[i] = result_byte;
     }
 
+    // left circular shift by 11 bits
+    encrypted_block = (u32::from_be_bytes(encrypted_block).rotate_left(11)).to_be_bytes();
     encrypted_block
 }
 
